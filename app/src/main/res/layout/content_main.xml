@@ -5,19 +5,23 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     >
-
-    <Button
-        android:id="@+id/send_request"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Send Request"/>
+        android:layout_height="50dp"
+        android:background="#484E61">
 
-    <ScrollView
+        <TextView
+            android:id="@+id/title_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textColor="#fff"
+            android:textSize="24sp"/>
+    </RelativeLayout>
+
+    <ListView
+        android:id="@+id/list_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <TextView
-            android:id="@+id/response_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-    </ScrollView>
+    </ListView>
 </LinearLayout>

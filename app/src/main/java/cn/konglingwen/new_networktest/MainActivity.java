@@ -1,58 +1,87 @@
 package cn.konglingwen.new_networktest;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import cn.konglingwen.new_networktest.model.City;
+import cn.konglingwen.new_networktest.model.County;
 import cn.konglingwen.new_networktest.model.NNDB;
+import cn.konglingwen.new_networktest.model.Province;
 import cn.konglingwen.new_networktest.util.Data_analyse;
 import cn.konglingwen.new_networktest.util.HttpUtil;
 
-public class MainActivity extends Activity implements View.OnClickListener {
+public class MainActivity extends Activity {
 
-    public static final int SHOW_RESPONSE = 0;
-    private Button sendRequest;
-    private TextView responseText;
+    public static final int LEVEL_PROVINCE = 0;
+    public static final int LEVEL_CITY = 1;
+    public static final int LEVEL_COUNTY = 2;
+
+    private TextView titleText;
+    private ListView listView;
+    private ArrayAdapter<String> adapter;
     private NNDB nndb;
+    private List<String> dataList = new ArrayList<>();
 
-    private Handler handler = new Handler() {
+    private List<Province> provinceList;
+    private List<City> cityList;
+    private List<County> countyList;
 
-        public void handleMessage(Message msg){
-            switch (msg.what){
-                case SHOW_RESPONSE:
-                    String response = (String) msg.obj;
-                    responseText.setText(response);
-            }
-        }
-    };
+    private Province selectedProvince;
+    private City selectedCity;
+    private int currentLevel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.content_main);
-        sendRequest = (Button) findViewById(R.id.send_request);
-        responseText = (TextView) findViewById(R.id.response_text);
-        sendRequest.setOnClickListener(this);
+        listView = (ListView) findViewById(R.id.list_view);
+        titleText = (TextView) findViewById(R.id.title_text);
+        adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, dataList);
+        listView.setAdapter(adapter);
         nndb = NNDB.getInstance(this);
+        initData();
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (currentLevel == LEVEL_PROVINCE){
+                    selectedProvince = provinceList.get(position);
+                    queryCities();
+                } else if (currentLevel == LEVEL_CITY){
+                    selectedCity = cityList.get(position);
+                    queryCounties();
+                }
+            }
+        });
+        queryProvinces();
     }
 
-    @Override
-    public void onClick(View v){
+    public void initData(){
         String address_xml = "https://raw.githubusercontent.com/deank90/test_app/master/china_cities.xml";
-        if (v.getId() == R.id.send_request){
             HttpUtil.sendHttpRequest(address_xml, new HttpUtil.HttpCallbackListener() {
                 @Override
                 public void onFinish(String response) {
-                    Data_analyse.parseXMLWithPull(response, nndb);
-                    Message message = new Message();
-                    message.what = SHOW_RESPONSE;
-                    message.obj = response;
-                    handler.sendMessage(message);
+                    List<Province> provinceList = nndb.loadProvinces();
+                    if (provinceList.size() > 0) {
+                        Log.d("Exist Data!", "Already exist database!");
+                    } else {
+                        Data_analyse.parseXMLWithPull(response, nndb);
+                    }
                 }
 
                 @Override
@@ -65,6 +94,59 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     });
                 }
             });
+
+    }
+
+    private void queryProvinces(){
+        provinceList = nndb.loadProvinces();
+        if (provinceList.size() > 0) {
+            dataList.clear();
+            for (Province province : provinceList){
+                dataList.add(province.getProvinceName());
+            }
+            adapter.notifyDataSetChanged();
+            listView.setSelection(0);
+            titleText.setText("中国");
+            currentLevel = LEVEL_PROVINCE;
+        }
+    }
+
+    private void queryCities(){
+        cityList = nndb.loadCities(selectedProvince.getId());
+        if (cityList.size() > 0){
+            dataList.clear();
+            for (City city : cityList){
+                dataList.add(city.getCityName());
+            }
+            adapter.notifyDataSetChanged();
+            listView.setSelection(0);
+            titleText.setText(selectedProvince.getProvinceName());
+            currentLevel = LEVEL_CITY;
+        }
+    }
+
+    private void queryCounties(){
+        countyList = nndb.loadCounties(selectedCity.getId());
+        if (countyList.size() > 0){
+            dataList.clear();
+            for (County county : countyList){
+                dataList.add(county.getCountyName());
+            }
+            adapter.notifyDataSetChanged();
+            listView.setSelection(0);
+            titleText.setText(selectedCity.getCityName());
+            currentLevel = LEVEL_COUNTY;
+        }
+    }
+
+    @Override
+    public void onBackPressed(){
+        if (currentLevel == LEVEL_COUNTY){
+            queryCities();
+        } else if (currentLevel == LEVEL_CITY){
+            queryProvinces();
+        }else {
+            finish();
         }
     }
 }
