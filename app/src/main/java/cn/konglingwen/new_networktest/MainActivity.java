@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import cn.konglingwen.new_networktest.model.NNDB;
 import cn.konglingwen.new_networktest.util.Data_analyse;
 import cn.konglingwen.new_networktest.util.HttpUtil;
 
@@ -17,6 +18,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public static final int SHOW_RESPONSE = 0;
     private Button sendRequest;
     private TextView responseText;
+    private NNDB nndb;
 
     private Handler handler = new Handler() {
 
@@ -36,6 +38,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         sendRequest = (Button) findViewById(R.id.send_request);
         responseText = (TextView) findViewById(R.id.response_text);
         sendRequest.setOnClickListener(this);
+        nndb = NNDB.getInstance(this);
     }
 
     @Override
@@ -45,7 +48,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             HttpUtil.sendHttpRequest(address_xml, new HttpUtil.HttpCallbackListener() {
                 @Override
                 public void onFinish(String response) {
-                    Data_analyse.parseXMLWithPull(response);
+                    Data_analyse.parseXMLWithPull(response, nndb);
                     Message message = new Message();
                     message.what = SHOW_RESPONSE;
                     message.obj = response;
