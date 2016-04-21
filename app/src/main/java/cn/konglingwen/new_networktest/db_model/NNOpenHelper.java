@@ -25,6 +25,7 @@ public class NNOpenHelper extends SQLiteOpenHelper {
             "id integer primary key autoincrement, " +
             "county_name text, " +
             "county_code text, " +
+            "weather_code text, " +
             "city_id integer)";
 
     public NNOpenHelper(Context context, String name, SQLiteDatabase.CursorFactory factory,
