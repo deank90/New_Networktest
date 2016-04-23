@@ -71,7 +71,7 @@ public class Data_analyse {
         }
     }
 
-    public static void handleWeatherResponse(Context context, String response){
+    public static void handleWeatherResponse(Context context, String response, String address){
         try {
             String temp1 = null;
             String temp2 = null;
@@ -79,7 +79,7 @@ public class Data_analyse {
             String currrent_date = null;
             JSONObject jsonRaw = new JSONObject(response);
             String cityName = jsonRaw.getJSONObject("data").getString("city");
-            String aqi = "AQI:" + jsonRaw.getJSONObject("data").getString("aqi");
+//            String aqi = "AQI:" + jsonRaw.getJSONObject("data").getString("aqi");
             String forecast = jsonRaw.getJSONObject("data").getString("forecast");
             JSONArray jsonArray = new JSONArray(forecast);
             int len = jsonArray.length();
@@ -93,22 +93,25 @@ public class Data_analyse {
                     break;
                 }
             }
-            saveWeatherInfo(context, cityName, temp1, temp2, weatherDesp, aqi, currrent_date);
+            saveWeatherInfo(context, cityName, temp1, temp2, weatherDesp, currrent_date, address);
         }catch (JSONException e){
             e.printStackTrace();
         }
     }
 
     public static void saveWeatherInfo(Context context, String cityName, String temp1, String temp2,
-                                       String weatherDesp, String aqi, String current_date){
+                                       String weatherDesp,  String current_date, String address){
+        String[] temp_array = address.split("=");
+        String county_code = temp_array[1];
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putBoolean("city_selected", true);
         editor.putString("city_name", cityName);
         editor.putString("temp1", temp1);
         editor.putString("temp2", temp2);
         editor.putString("weather_desp", weatherDesp);
-        editor.putString("aqi", aqi);
+//        editor.putString("aqi", aqi);
         editor.putString("current_date", current_date);
+        editor.putString("county_code", county_code);
         editor.commit();
 
     }
